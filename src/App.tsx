@@ -8,13 +8,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, LayoutDashboard, BarChart3, Globe, CloudSun, Wind, Droplets, Thermometer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Configuration for the display screens using static paths from public/
+// Import assets directly so Vite can handle hashing and path resolution
+import screen0Image from './assets/screen_0.png';
+import screen1Image from './assets/screen_1.png';
+import screen2Image from './assets/screen_2.png';
+
+// Configuration for the display screens using imported assets
 const SCREENS = [
   { 
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: 'screen_0.png', 
+    url: screen0Image, 
     fallback: 'https://picsum.photos/seed/citrus/3840/2160',
     icon: <CloudSun size={20} /> 
   },
@@ -22,7 +27,7 @@ const SCREENS = [
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: 'screen_1.png', 
+    url: screen1Image, 
     fallback: 'https://picsum.photos/seed/corn/3840/2160',
     icon: <Thermometer size={20} /> 
   },
@@ -30,7 +35,7 @@ const SCREENS = [
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: 'screen_2.png', 
+    url: screen2Image, 
     fallback: 'https://picsum.photos/seed/fish/3840/2160',
     icon: <Droplets size={20} /> 
   },
@@ -53,20 +58,6 @@ export default function App() {
   const [scale, setScale] = useState(0.2); 
   const [loadError, setLoadError] = useState<Record<string, boolean>>({});
   const [useFallback, setUseFallback] = useState<Record<string, boolean>>({});
-
-  // Helper to get absolute URL for images
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
-    
-    // Use window.location.origin to build a truly absolute URL
-    // This avoids any relative path ambiguity on Netlify
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-    
-    // Add a version query to bypass potential CDN stale cache
-    return `${origin}/${cleanUrl}?v=1.0.3`;
-  };
 
   // Calculate scale to fit 4K content into current viewport
   const updateScale = useCallback(() => {
@@ -128,8 +119,7 @@ export default function App() {
     const target = event.target as HTMLImageElement;
     console.error(`[DEBUG] Image load failed! 
       ID: ${id}
-      Attempted URL: ${target.src}
-      Original Config: ${SCREENS.find(s => s.id === id)?.url}`);
+      Attempted URL: ${target.src}`);
     
     if (!useFallback[id]) {
       setUseFallback(prev => ({ ...prev, [id]: true }));
@@ -196,7 +186,7 @@ export default function App() {
               </div>
             ) : (
               <img
-                src={useFallback[SCREENS[currentIndex].id] ? SCREENS[currentIndex].fallback : getFullUrl(SCREENS[currentIndex].url)}
+                src={useFallback[SCREENS[currentIndex].id] ? SCREENS[currentIndex].fallback : SCREENS[currentIndex].url}
                 className="w-full h-full object-cover"
                 alt={SCREENS[currentIndex].title}
                 onLoad={handleImageLoad}
@@ -323,7 +313,7 @@ export default function App() {
         {SCREENS.map(screen => (
           <img 
             key={`preload-${screen.id}`} 
-            src={getFullUrl(screen.url)} 
+            src={screen.url} 
             alt="preload" 
             referrerPolicy="no-referrer-when-downgrade"
           />
