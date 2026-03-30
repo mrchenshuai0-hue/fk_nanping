@@ -7,13 +7,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, LayoutDashboard, BarChart3, Globe, CloudSun, Wind, Droplets, Thermometer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Configuration for the display screens using static paths from public/assets/
+// Configuration for the display screens using static paths from public/
 const SCREENS = [
   { 
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: '/assets/screen_0.png', 
+    url: '/screen_0.png', 
     fallback: 'https://picsum.photos/seed/citrus/3840/2160',
     icon: <CloudSun size={20} /> 
   },
@@ -21,7 +21,7 @@ const SCREENS = [
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: '/assets/screen_1.png', 
+    url: '/screen_1.png', 
     fallback: 'https://picsum.photos/seed/corn/3840/2160',
     icon: <Thermometer size={20} /> 
   },
@@ -29,7 +29,7 @@ const SCREENS = [
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: '/assets/screen_2.png', 
+    url: '/screen_2.png', 
     fallback: 'https://picsum.photos/seed/fish/3840/2160',
     icon: <Droplets size={20} /> 
   },
@@ -57,9 +57,9 @@ export default function App() {
   const getFullUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
-    // Standard root-relative path is usually best for SPAs
-    const finalUrl = url.startsWith('/') ? url : `/${url}`;
-    return finalUrl;
+    
+    // Ensure root-relative path
+    return url.startsWith('/') ? url : `/${url}`;
   };
 
   // Calculate scale to fit 4K content into current viewport
@@ -191,7 +191,6 @@ export default function App() {
                 alt={SCREENS[currentIndex].title}
                 onLoad={handleImageLoad}
                 onError={() => handleImageError(SCREENS[currentIndex].id)}
-                referrerPolicy="no-referrer"
               />
             )}
           </motion.div>
@@ -315,7 +314,6 @@ export default function App() {
             key={`preload-${screen.id}`} 
             src={getFullUrl(screen.url)} 
             alt="preload" 
-            referrerPolicy="no-referrer"
           />
         ))}
       </div>
