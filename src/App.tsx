@@ -58,8 +58,13 @@ export default function App() {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
     
-    // Ensure root-relative path
-    return url.startsWith('/') ? url : `/${url}`;
+    // Use Vite's BASE_URL for robust path resolution
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    const fullUrl = `${baseUrl}${cleanUrl}`;
+    
+    // Add a small cache-buster to ensure fresh load on Netlify
+    return `${fullUrl}?v=1.0.1`;
   };
 
   // Calculate scale to fit 4K content into current viewport
