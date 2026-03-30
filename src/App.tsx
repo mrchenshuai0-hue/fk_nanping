@@ -140,7 +140,7 @@ export default function App() {
 
   const currentScreen = SCREENS[currentIndex];
   const currentRetry = retryCount[currentScreen.id] || 0;
-  const imageUrl = `${currentScreen.url}${currentRetry > 0 ? `&retry=${currentRetry}` : ''}`;
+  const imageUrl = `${currentScreen.url}${currentRetry > 0 ? `&retry=${currentRetry}` : ''}&t=${Date.now()}`;
 
   return (
     <div className="relative w-screen h-screen bg-[#000510] overflow-hidden font-sans select-none">
@@ -195,16 +195,22 @@ export default function App() {
                 </motion.div>
               </div>
             ) : (
+            <div 
+              key={`${currentIndex}-${currentRetry}`}
+              className="w-full h-full bg-cover bg-center bg-no-repeat"
+              style={{ 
+                backgroundImage: `url(${useFallback[currentScreen.id] ? currentScreen.fallback : imageUrl})` 
+              }}
+              aria-label={currentScreen.title}
+            >
+              {/* Hidden image to trigger load/error handlers */}
               <img
-                key={`${currentIndex}-${currentRetry}`}
                 src={useFallback[currentScreen.id] ? currentScreen.fallback : imageUrl}
-                className="w-full h-full object-cover"
-                alt={currentScreen.title}
+                className="hidden"
                 onLoad={handleImageLoad}
                 onError={(e) => handleImageError(currentScreen.id, e)}
-                referrerPolicy="no-referrer-when-downgrade"
-                crossOrigin="anonymous"
               />
+            </div>
             )}
           </motion.div>
         </AnimatePresence>
@@ -351,7 +357,7 @@ export default function App() {
 
       {/* Version Tag for Troubleshooting */}
       <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono pointer-events-none">
-        BUILD_VER: 1.0.8 | PATH: {imageUrl}
+        BUILD_VER: 1.0.9 | PATH: {imageUrl}
       </div>
     </div>
   );
