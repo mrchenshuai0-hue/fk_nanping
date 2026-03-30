@@ -15,7 +15,7 @@ const SCREENS = [
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: '/bg_screen_0.png', 
+    url: '/bg0.png?v=1.0.8', 
     fallback: 'https://picsum.photos/seed/citrus/3840/2160',
     icon: <CloudSun size={20} /> 
   },
@@ -23,7 +23,7 @@ const SCREENS = [
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: '/bg_screen_1.png', 
+    url: '/bg1.png?v=1.0.8', 
     fallback: 'https://picsum.photos/seed/corn/3840/2160',
     icon: <Thermometer size={20} /> 
   },
@@ -31,7 +31,7 @@ const SCREENS = [
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: '/bg_screen_2.png', 
+    url: '/bg2.png?v=1.0.8', 
     fallback: 'https://picsum.photos/seed/fish/3840/2160',
     icon: <Droplets size={20} /> 
   },
@@ -111,13 +111,23 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [currentIndex, isMenuOpen, isTransitioning, handleSwitch]);
 
+  const [retryCount, setRetryCount] = useState<{ [key: string]: number }>({});
+
   const handleImageError = (id: string, event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = event.target as HTMLImageElement;
-    console.error(`[DEBUG] Image load failed! 
-      ID: ${id}
-      Attempted URL: ${target.src}`);
+    const currentRetry = retryCount[id] || 0;
     
-    if (!useFallback[id]) {
+    console.warn(`[DEBUG] Image load failed! 
+      ID: ${id}
+      Attempted URL: ${target.src}
+      Retry: ${currentRetry}`);
+    
+    if (currentRetry < 2) {
+      // Small delay before retry
+      setTimeout(() => {
+        setRetryCount(prev => ({ ...prev, [id]: currentRetry + 1 }));
+      }, 1000);
+    } else if (!useFallback[id]) {
       setUseFallback(prev => ({ ...prev, [id]: true }));
     } else {
       setLoadError(prev => ({ ...prev, [id]: true }));
@@ -127,6 +137,10 @@ export default function App() {
   const handleImageLoad = () => {
     // No-op, kept for compatibility if needed
   };
+
+  const currentScreen = SCREENS[currentIndex];
+  const currentRetry = retryCount[currentScreen.id] || 0;
+  const imageUrl = `${currentScreen.url}${currentRetry > 0 ? `&retry=${currentRetry}` : ''}`;
 
   return (
     <div className="relative w-screen h-screen bg-[#000510] overflow-hidden font-sans select-none">
@@ -182,11 +196,12 @@ export default function App() {
               </div>
             ) : (
               <img
-                src={useFallback[SCREENS[currentIndex].id] ? SCREENS[currentIndex].fallback : SCREENS[currentIndex].url}
+                key={`${currentIndex}-${currentRetry}`}
+                src={useFallback[currentScreen.id] ? currentScreen.fallback : imageUrl}
                 className="w-full h-full object-cover"
-                alt={SCREENS[currentIndex].title}
+                alt={currentScreen.title}
                 onLoad={handleImageLoad}
-                onError={(e) => handleImageError(SCREENS[currentIndex].id, e)}
+                onError={(e) => handleImageError(currentScreen.id, e)}
                 referrerPolicy="no-referrer-when-downgrade"
                 crossOrigin="anonymous"
               />
@@ -336,7 +351,7 @@ export default function App() {
 
       {/* Version Tag for Troubleshooting */}
       <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono pointer-events-none">
-        BUILD_VER: 1.0.6 | PATH: {SCREENS[currentIndex].url}
+        BUILD_VER: 1.0.8 | PATH: {imageUrl}
       </div>
     </div>
   );
