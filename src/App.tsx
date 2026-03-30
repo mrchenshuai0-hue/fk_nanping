@@ -8,18 +8,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, LayoutDashboard, BarChart3, Globe, CloudSun, Wind, Droplets, Thermometer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Import assets directly so Vite can handle hashing and path resolution
-import screen0Image from './assets/screen_0.png';
-import screen1Image from './assets/screen_1.png';
-import screen2Image from './assets/screen_2.png';
-
-// Configuration for the display screens using imported assets
+// Configuration for the display screens using stable paths from the public folder
+// This bypasses Vite's hashing and ensures images are always at the root on Netlify
 const SCREENS = [
   { 
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: screen0Image, 
+    url: '/screen_0.png', 
     fallback: 'https://picsum.photos/seed/citrus/3840/2160',
     icon: <CloudSun size={20} /> 
   },
@@ -27,7 +23,7 @@ const SCREENS = [
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: screen1Image, 
+    url: '/screen_1.png', 
     fallback: 'https://picsum.photos/seed/corn/3840/2160',
     icon: <Thermometer size={20} /> 
   },
@@ -35,7 +31,7 @@ const SCREENS = [
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: screen2Image, 
+    url: '/screen_2.png', 
     fallback: 'https://picsum.photos/seed/fish/3840/2160',
     icon: <Droplets size={20} /> 
   },
@@ -337,6 +333,11 @@ export default function App() {
           background: rgba(59, 130, 246, 0.4);
         }
       `}} />
+
+      {/* Version Tag for Troubleshooting */}
+      <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono pointer-events-none">
+        BUILD_VER: 1.0.5 | PATH: {SCREENS[currentIndex].url}
+      </div>
     </div>
   );
 }
