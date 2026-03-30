@@ -1,7 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Updated: 2026-03-30 - Fixed image path resolution and added referrer policy.
+ * Updated: 2026-03-30 - Fixed image path resolution, added referrer policy, and forced new build hash v1.0.4.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -192,6 +192,7 @@ export default function App() {
                 onLoad={handleImageLoad}
                 onError={(e) => handleImageError(SCREENS[currentIndex].id, e)}
                 referrerPolicy="no-referrer-when-downgrade"
+                crossOrigin="anonymous"
               />
             )}
           </motion.div>
@@ -316,6 +317,7 @@ export default function App() {
             src={screen.url} 
             alt="preload" 
             referrerPolicy="no-referrer-when-downgrade"
+            crossOrigin="anonymous"
           />
         ))}
       </div>
