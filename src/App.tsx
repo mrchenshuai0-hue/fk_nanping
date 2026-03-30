@@ -140,7 +140,7 @@ export default function App() {
   const currentRetry = retryCount[currentScreen.id] || 0;
   
   // Use a unique query string for each retry to force bypass all caches
-  const imageUrl = `${currentScreen.url}?v=1.2.3&retry=${currentRetry}&t=${Date.now()}`;
+  const imageUrl = `${currentScreen.url}?v=1.2.4&retry=${currentRetry}&t=${Date.now()}`;
   
   useEffect(() => {
     let active = true;
@@ -396,9 +396,10 @@ export default function App() {
 
       {/* Version Tag for Troubleshooting */}
       <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono flex flex-col items-end gap-1">
-        <div>BUILD_VER: 1.2.3 | {debugInfo}</div>
+        <div>BUILD_VER: 1.2.4 | {debugInfo}</div>
         <div className="flex gap-4">
-          <a href="/test_image.png" target="_blank" className="underline pointer-events-auto hover:text-blue-300">测试有效图片 (1x1红点)</a>
+          <a href="/test_image.png" target="_blank" className="underline pointer-events-auto hover:text-blue-300">测试 PNG (1x1红点)</a>
+          <a href="/test_image.bin" target="_blank" className="underline pointer-events-auto hover:text-blue-300">测试 BIN (1x1红点)</a>
           <a href={imageUrl} download={`debug_${currentScreen.id}.png`} className="underline pointer-events-auto hover:text-blue-300">下载当前图片</a>
           <a href="/test.txt" target="_blank" className="underline pointer-events-auto hover:text-blue-300">验证静态资源服务 (test.txt)</a>
         </div>
