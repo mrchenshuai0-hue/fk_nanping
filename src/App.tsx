@@ -59,10 +59,13 @@ export default function App() {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
     
-    // For assets in the public folder, we use a relative path
-    // This is more robust in various deployment environments
+    // Use window.location.origin to build a truly absolute URL
+    // This avoids any relative path ambiguity on Netlify
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-    return `./${cleanUrl}`;
+    
+    // Add a version query to bypass potential CDN stale cache
+    return `${origin}/${cleanUrl}?v=1.0.3`;
   };
 
   // Calculate scale to fit 4K content into current viewport
@@ -121,9 +124,13 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [currentIndex, isMenuOpen, isTransitioning, handleSwitch]);
 
-  const handleImageError = (id: string) => {
-    const screen = SCREENS.find(s => s.id === id);
-    console.error(`[DEBUG] Image load failed for ID ${id}. URL: ${screen?.url}`);
+  const handleImageError = (id: string, event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = event.target as HTMLImageElement;
+    console.error(`[DEBUG] Image load failed! 
+      ID: ${id}
+      Attempted URL: ${target.src}
+      Original Config: ${SCREENS.find(s => s.id === id)?.url}`);
+    
     if (!useFallback[id]) {
       setUseFallback(prev => ({ ...prev, [id]: true }));
     } else {
@@ -193,8 +200,8 @@ export default function App() {
                 className="w-full h-full object-cover"
                 alt={SCREENS[currentIndex].title}
                 onLoad={handleImageLoad}
-                onError={() => handleImageError(SCREENS[currentIndex].id)}
-                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(SCREENS[currentIndex].id, e)}
+                referrerPolicy="no-referrer-when-downgrade"
               />
             )}
           </motion.div>
@@ -318,7 +325,7 @@ export default function App() {
             key={`preload-${screen.id}`} 
             src={getFullUrl(screen.url)} 
             alt="preload" 
-            referrerPolicy="no-referrer"
+            referrerPolicy="no-referrer-when-downgrade"
           />
         ))}
       </div>
