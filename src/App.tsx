@@ -50,6 +50,8 @@ export default function App() {
   const [scale, setScale] = useState(0.2); 
   const [loadError, setLoadError] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string>("");
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   // Calculate scale to fit 4K content into current viewport
   const updateScale = useCallback(() => {
@@ -138,7 +140,45 @@ export default function App() {
   const currentRetry = retryCount[currentScreen.id] || 0;
   
   // Use a unique query string for each retry to force bypass all caches
-  const imageUrl = `${currentScreen.url}?v=1.2.1&retry=${currentRetry}&t=${Date.now()}`;
+  const imageUrl = `${currentScreen.url}?v=1.2.2&retry=${currentRetry}&t=${Date.now()}`;
+  
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setIsLoading(true);
+      setDebugInfo("正在尝试获取资源...");
+      try {
+        const r = await fetch(imageUrl, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
+        
+        const contentType = r.headers.get('Content-Type');
+        const contentLength = r.headers.get('Content-Length');
+        setDebugInfo(`状态: ${r.status}, 类型: ${contentType}, 大小: ${contentLength} 字节`);
+        
+        if (!contentType?.includes('image')) {
+          console.warn(`[DEBUG] 警告: 资源类型不是图片 (${contentType})`);
+        }
+        
+        const b = await r.blob();
+        if (active) {
+          const url = URL.createObjectURL(b);
+          setBlobUrl(url);
+          setIsLoading(false);
+        }
+      } catch (e) {
+        if (active) {
+          const msg = e instanceof Error ? e.message : String(e);
+          setDebugInfo(`获取失败: ${msg}`);
+          handleImageError(currentScreen.id, {} as any);
+        }
+      }
+    };
+    load();
+    return () => {
+      active = false;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [imageUrl, currentScreen.id]);
   
   // Minimal base64 placeholder (a dark blue gradient)
   const placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+pVPQAIYAM76v8fVAAAAABJRU5ErkJggg==";
@@ -195,18 +235,20 @@ export default function App() {
               key={`${currentIndex}-${currentRetry}`}
               className="w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-1000"
               style={{ 
-                backgroundImage: `url(${isLoading ? placeholder : imageUrl})`,
+                backgroundImage: `url(${isLoading ? placeholder : (blobUrl || imageUrl)})`,
                 backgroundColor: '#000510'
               }}
               aria-label={currentScreen.title}
             >
-              {/* Hidden image to trigger load/error handlers */}
-              <img
-                src={imageUrl}
-                className="hidden"
-                onLoad={handleImageLoad}
-                onError={(e) => handleImageError(currentScreen.id, e)}
-              />
+              {/* Hidden image to trigger load/error handlers if not using blob */}
+              {!blobUrl && (
+                <img
+                  src={imageUrl}
+                  className="hidden"
+                  onLoad={handleImageLoad}
+                  onError={(e) => handleImageError(currentScreen.id, e)}
+                />
+              )}
             </div>
             )}
           </motion.div>
@@ -354,8 +396,11 @@ export default function App() {
 
       {/* Version Tag for Troubleshooting */}
       <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono flex flex-col items-end gap-1">
-        <div>BUILD_VER: 1.2.1 | PATH: {imageUrl}</div>
-        <a href="/test.txt" target="_blank" className="underline pointer-events-auto hover:text-blue-300">验证静态资源服务 (test.txt)</a>
+        <div>BUILD_VER: 1.2.2 | {debugInfo}</div>
+        <div className="flex gap-4">
+          <a href={imageUrl} download={`debug_${currentScreen.id}.png`} className="underline pointer-events-auto hover:text-blue-300">下载当前图片</a>
+          <a href="/test.txt" target="_blank" className="underline pointer-events-auto hover:text-blue-300">验证静态资源服务 (test.txt)</a>
+        </div>
       </div>
     </div>
   );
