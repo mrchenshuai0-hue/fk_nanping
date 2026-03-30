@@ -15,32 +15,28 @@ const SCREENS = [
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: '/bg0.png?v=1.0.8', 
-    fallback: 'https://picsum.photos/seed/citrus/3840/2160',
+    url: '/bg0.png', 
     icon: <CloudSun size={20} /> 
   },
   { 
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: '/bg1.png?v=1.0.8', 
-    fallback: 'https://picsum.photos/seed/corn/3840/2160',
+    url: '/bg1.png', 
     icon: <Thermometer size={20} /> 
   },
   { 
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: '/bg2.png?v=1.0.8', 
-    fallback: 'https://picsum.photos/seed/fish/3840/2160',
+    url: '/bg2.png', 
     icon: <Droplets size={20} /> 
   },
   { 
     id: '4', 
     title: '其他大屏', 
     description: '南平市气象社会服务现代化数智核心，整合多维气象数据，赋能地方特色农业高质量发展。',
-    url: 'https://picsum.photos/seed/meteo-core/3840/2160', 
-    fallback: 'https://picsum.photos/seed/meteo-core/3840/2160',
+    url: '/bg0.png', 
     icon: <Globe size={20} /> 
   },
 ];
@@ -53,7 +49,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scale, setScale] = useState(0.2); 
   const [loadError, setLoadError] = useState<Record<string, boolean>>({});
-  const [useFallback, setUseFallback] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Calculate scale to fit 4K content into current viewport
   const updateScale = useCallback(() => {
@@ -87,6 +83,7 @@ export default function App() {
     
     setIsMenuOpen(false);
     setIsTransitioning(true);
+    setIsLoading(true);
     setCurrentIndex(index);
   }, [currentIndex, isTransitioning]);
 
@@ -122,25 +119,29 @@ export default function App() {
       Attempted URL: ${target.src}
       Retry: ${currentRetry}`);
     
-    if (currentRetry < 2) {
+    if (currentRetry < 5) {
       // Small delay before retry
       setTimeout(() => {
         setRetryCount(prev => ({ ...prev, [id]: currentRetry + 1 }));
-      }, 1000);
-    } else if (!useFallback[id]) {
-      setUseFallback(prev => ({ ...prev, [id]: true }));
+      }, 2000);
     } else {
       setLoadError(prev => ({ ...prev, [id]: true }));
+      setIsLoading(false);
     }
   };
 
   const handleImageLoad = () => {
-    // No-op, kept for compatibility if needed
+    setIsLoading(false);
   };
 
   const currentScreen = SCREENS[currentIndex];
   const currentRetry = retryCount[currentScreen.id] || 0;
-  const imageUrl = `${currentScreen.url}${currentRetry > 0 ? `&retry=${currentRetry}` : ''}&t=${Date.now()}`;
+  
+  // Use a unique query string for each retry to force bypass all caches
+  const imageUrl = `${currentScreen.url}?v=1.2.1&retry=${currentRetry}&t=${Date.now()}`;
+  
+  // Minimal base64 placeholder (a dark blue gradient)
+  const placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+pVPQAIYAM76v8fVAAAAABJRU5ErkJggg==";
 
   return (
     <div className="relative w-screen h-screen bg-[#000510] overflow-hidden font-sans select-none">
@@ -161,11 +162,6 @@ export default function App() {
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
             className="absolute inset-0"
           >
-            {useFallback[SCREENS[currentIndex].id] && (
-              <div className="absolute top-4 left-4 z-[200] bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold animate-pulse shadow-lg">
-                正在使用备用演示图片 (资源加载失败)
-              </div>
-            )}
             {loadError[SCREENS[currentIndex].id] ? (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#001a3d] via-[#000a1a] to-[#001a3d] text-blue-400">
                 {/* Animated Radar Background for Error State */}
@@ -197,15 +193,16 @@ export default function App() {
             ) : (
             <div 
               key={`${currentIndex}-${currentRetry}`}
-              className="w-full h-full bg-cover bg-center bg-no-repeat"
+              className="w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-1000"
               style={{ 
-                backgroundImage: `url(${useFallback[currentScreen.id] ? currentScreen.fallback : imageUrl})` 
+                backgroundImage: `url(${isLoading ? placeholder : imageUrl})`,
+                backgroundColor: '#000510'
               }}
               aria-label={currentScreen.title}
             >
               {/* Hidden image to trigger load/error handlers */}
               <img
-                src={useFallback[currentScreen.id] ? currentScreen.fallback : imageUrl}
+                src={imageUrl}
                 className="hidden"
                 onLoad={handleImageLoad}
                 onError={(e) => handleImageError(currentScreen.id, e)}
@@ -356,8 +353,9 @@ export default function App() {
       `}} />
 
       {/* Version Tag for Troubleshooting */}
-      <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono pointer-events-none">
-        BUILD_VER: 1.0.9 | PATH: {imageUrl}
+      <div className="absolute bottom-4 right-4 z-[200] text-[10px] text-blue-400/30 font-mono flex flex-col items-end gap-1">
+        <div>BUILD_VER: 1.2.1 | PATH: {imageUrl}</div>
+        <a href="/test.txt" target="_blank" className="underline pointer-events-auto hover:text-blue-300">验证静态资源服务 (test.txt)</a>
       </div>
     </div>
   );
