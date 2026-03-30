@@ -1,6 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * Updated: 2026-03-30 - Fixed image path resolution and added referrer policy.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,7 +14,7 @@ const SCREENS = [
     id: '1', 
     title: '崇维桔柚服务站', 
     description: '集成桔柚生长气象服务专题、灾害指标监测及逐日天气预报，为桔柚产业提供全方位数智化支撑。',
-    url: '/screen_0.png', 
+    url: 'screen_0.png', 
     fallback: 'https://picsum.photos/seed/citrus/3840/2160',
     icon: <CloudSun size={20} /> 
   },
@@ -21,7 +22,7 @@ const SCREENS = [
     id: '2', 
     title: '建瓯鲜食玉米服务平台', 
     description: '实时监控鲜食玉米生长环境，提供气象适宜性指标分析、主要气象灾害预警及农事活动建议。',
-    url: '/screen_1.png', 
+    url: 'screen_1.png', 
     fallback: 'https://picsum.photos/seed/corn/3840/2160',
     icon: <Thermometer size={20} /> 
   },
@@ -29,7 +30,7 @@ const SCREENS = [
     id: '3', 
     title: '仁厚稻花鱼服务站', 
     description: '结合稻花鱼养殖需求，提供7天逐日预报、农业气象灾害风险预警及实时信息风采展示。',
-    url: '/screen_2.png', 
+    url: 'screen_2.png', 
     fallback: 'https://picsum.photos/seed/fish/3840/2160',
     icon: <Droplets size={20} /> 
   },
@@ -58,13 +59,10 @@ export default function App() {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
     
-    // Use Vite's BASE_URL for robust path resolution
-    const baseUrl = import.meta.env.BASE_URL || '/';
+    // For assets in the public folder, we use a relative path
+    // This is more robust in various deployment environments
     const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-    const fullUrl = `${baseUrl}${cleanUrl}`;
-    
-    // Add a small cache-buster to ensure fresh load on Netlify
-    return `${fullUrl}?v=1.0.1`;
+    return `./${cleanUrl}`;
   };
 
   // Calculate scale to fit 4K content into current viewport
@@ -196,6 +194,7 @@ export default function App() {
                 alt={SCREENS[currentIndex].title}
                 onLoad={handleImageLoad}
                 onError={() => handleImageError(SCREENS[currentIndex].id)}
+                referrerPolicy="no-referrer"
               />
             )}
           </motion.div>
@@ -319,6 +318,7 @@ export default function App() {
             key={`preload-${screen.id}`} 
             src={getFullUrl(screen.url)} 
             alt="preload" 
+            referrerPolicy="no-referrer"
           />
         ))}
       </div>
