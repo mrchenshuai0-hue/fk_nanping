@@ -1,0 +1,17 @@
+/bg0.png
+  Content-Type: image/png
+  Cache-Control: no-cache
+/bg1.png
+  Content-Type: image/png
+  Cache-Control: no-cache
+/bg2.png
+  Content-Type: image/png
+  Cache-Control: no-cache
+/*.png
+  Content-Type: image/png
+/*.jpg
+  Content-Type: image/jpeg
+/test.txt
+  Content-Type: text/plain
+/test_image.bin
+  Content-Type: application/octet-stream
